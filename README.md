@@ -1,70 +1,149 @@
-# Getting Started with Create React App
+# react-web-app
+A React web app that is built with testing in mind
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## How to get started
 
-## Available Scripts
+### Install stuff
 
-In the project directory, you can run:
+```bash
+npm init -y
+npm i create-react-app
+npx create-react-app my-app
+cd my-app
+npm start
+```
 
-### `npm start`
+### 🧪️Testing strategy
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+| Expected Behavior  | Tested? | Test Type  | Technologies  |
+|---|---|---|---|
+| A URL with the right text exists  | 🙅‍♂️ |  |  |
+| App renders correctly  | 🙅‍♂️ |   |   |
+| URL is correct | 🙅‍♂️ |   |  |
+| App looks as expected on web and mobile  | 🙅‍♂️ |   |   |
+| Front-end performance is at least a B  | 🙅‍♂️ |   |   |
+| App is secure  | 🙅‍♂️ |   |   |
+| App is accessibility friendly  | 🙅‍♂️ |   |   |
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Run the tests that come with our app
 
-### `npm test`
+* In a new terminal `npm run test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Now that everything is working, let's push this up to CI so that we can make sure it continues to work on other computers besides ours.
 
-### `npm run build`
+### Create CI Pipeline
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+* A little about [Github Actions](https://github.com/features/actions)
+* Use the UI to setup a Workflow
+* Paste in the following
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```yaml
+name: CI
+env:
+  SCREENER_API_KEY: ${{ secrets.SCREENER_API_KEY }}
+  SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+  SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.x]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Install dependencies 📦
+      #Using npm ci is generally faster than running npm install
+      run: |
+        cd my-app
+        npm ci
+    - name: Build the app 🏗
+      run: |
+        cd my-app
+        npm run build
+    - name: Run component tests 🔸
+      run: |
+        cd my-app
+        npm run test
+    - name: Start the app 📤
+      run: |
+        cd my-app
+        npm start &
+        npx wait-on --timeout 60000
+```
+* Add secret variables
+* Commit and watch it 🏃‍♀️
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Add another test
 
-### `npm run eject`
+| Expected Behavior  | Tested? | Test Type  | Technologies  |
+|---|---|---|---|
+| A URL with the right text exists  | ✅ | Component | React testing library, Jest |
+| App renders correctly  | 🙅‍♂️ |   |   |
+| URL is correct | 🙅‍♂️ |   |  |
+| App looks as expected on web and mobile  | 🙅‍♂️ |   |   |
+| Front-end performance is at least a B  | 🙅‍♂️ |   |   |
+| App is secure  | 🙅‍♂️ |   |   |
+| App is accessibility friendly  | 🙅‍♂️ |   |   |
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+* Add a test for checking that the url is correct
+* Update the url text
+* Update the code to use a test id
+* Commit and push to CI
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Shift-right and add a visual test
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+| Expected Behavior  | Tested? | Test Type  | Technologies  |
+|---|---|---|---|
+| A URL with the right text exists  | ✅ | Component | React testing library, Jest |
+| App renders correctly  | 🙅‍♂️ |   |   |
+| URL is correct | ✅ |  Component | React testing library, Jest |
+| App looks as expected on web and mobile  | 🙅‍♂️ |   |   |
+| Front-end performance is at least a B  | 🙅‍♂️ |   |   |
+| App is secure  | 🙅‍♂️ |   |   |
+| App is accessibility friendly  | 🙅‍♂️ |   |   |
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+* Learn about [webdriverio](https://webdriver.io/docs/gettingstarted) and [screenerio](https://screener.io/)
+* install wdio
 
-## Learn More
+```bash
+npm install @wdio/cli
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+* setup wdio
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+`npx wdio config`
 
-### Code Splitting
+* paste the following code as the new test
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```js
+describe('My React application', () => {   
+    it('should look correct', () => {
+        browser.url('');
+        browser.execute('/*@visual.init*/', 'My React App');
+        browser.execute('/*@visual.snapshot*/', 'Home Page');
+        const result = browser.execute('/*@visual.end*/');
+        expect(result.message).toBeNull();
+    });
+});
+```
 
-### Analyzing the Bundle Size
+**🧪️Test Plan**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+| Expected Behavior  | Tested? | Test Type  | Technologies  |
+|---|---|---|---|
+| A URL with the right text exists  | ✅ | Component | React testing library, Jest |
+| App renders correctly  | ✅ | visual d2d  | Webdriverio, Screener.io  |
+| URL is correct | ✅ |  Component | React testing library, Jest |
+| App looks as expected on web and mobile  | ✅ | visual d2d  | Webdriverio, Screener.io  |
+| Front-end performance is at least a B  | 🙅‍♂️ |   |   |
+| App is secure  | 🙅‍♂️ |   |   |
+| App is accessibility friendly  | 🙅‍♂️ |   |   |
